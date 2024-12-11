@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_cart_may/controller/home_screen_controller.dart';
+import 'package:shopping_cart_may/main.dart';
 import 'package:shopping_cart_may/view/cart_screen/cart_screen.dart';
 import 'package:shopping_cart_may/view/product_details_screen/product_details_screen.dart';
 
@@ -12,6 +15,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (timeStamp) async {
+        await context.read<HomeScreenController>().getCategories();
+      },
+    );
     super.initState();
   }
 
@@ -39,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final homeProvider = context.watch<HomeScreenController>();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -78,156 +87,176 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          // #1
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-            child: Row(
+      body: homeProvider.isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Column(
               children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
-                    height: 50,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey.withOpacity(.2)),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search,
-                          size: 30,
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text(
-                          "Search anything",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 18,
-                            color: Colors.grey,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 16,
-                ),
-                Container(
-                  height: 50,
-                  width: 50,
-                  decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Icon(
-                    Icons.filter_list,
-                    color: Colors.white,
-                  ),
-                )
+                // #1 - searchfield seciton
+                _buildSearchFieldSection(),
+                SizedBox(height: 16),
+                // #2 - categories tab section
+                _buildCategoriesSection(),
+                SizedBox(height: 16),
+                // #3 - Prducts grid seciton
+                _buildProductsSection()
               ],
             ),
-          ),
+    );
+  }
 
-          SizedBox(
-            height: 16,
-          ),
-          SingleChildScrollView(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: List.generate(
-                  5,
-                  (index) => Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: InkWell(
-                      onTap: () {
-                        _scrollToSelectedIndex(index);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 25),
-                        height: 45,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(.2),
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Text(
-                          "categoriesList",
-                          style: TextStyle(
-                              fontWeight: FontWeight.normal,
-                              color: Colors.black),
-                        ),
-                      ),
+  Expanded _buildProductsSection() {
+    return Expanded(
+        child: GridView.builder(
+      itemCount: 100,
+      padding: EdgeInsets.all(20),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 15,
+        crossAxisSpacing: 15,
+        mainAxisExtent: 250,
+      ),
+      itemBuilder: (context, index) => InkWell(
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductDetailsScreen(),
+              ));
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(15),
+              height: 200,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(.2),
+                  image: DecorationImage(
+                      fit: BoxFit.cover,
+                      image: NetworkImage(
+                          "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"))),
+              alignment: Alignment.topRight,
+              child: Container(
+                height: 45,
+                width: 45,
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(.7),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(
+                  Icons.favorite_outline,
+                  size: 30,
+                ),
+              ),
+            ),
+            Text(
+              maxLines: 1,
+              "title",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18),
+            ),
+            Text("price".toString()),
+          ],
+        ),
+      ),
+    ));
+  }
+
+  SingleChildScrollView _buildCategoriesSection() {
+    final homeProvider = context.watch<HomeScreenController>();
+
+    return SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: List.generate(
+            homeProvider.categories.length,
+            (index) => Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: InkWell(
+                onTap: () {
+                  _scrollToSelectedIndex(index);
+                  context
+                      .read<HomeScreenController>()
+                      .onCategorySelection(clickedIndex: index);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 25),
+                  height: 45,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                      color: homeProvider.selectedCategory == index
+                          ? Colors.black
+                          : Colors.grey.withOpacity(.2),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text(
+                    homeProvider.categories[index].toString().toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.normal,
+                      color: homeProvider.selectedCategory == index
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   ),
                 ),
               ),
             ),
           ),
-          SizedBox(
-            height: 16,
-          ),
+        ),
+      ),
+    );
+  }
+
+  Padding _buildSearchFieldSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+      child: Row(
+        children: [
           Expanded(
-              child: GridView.builder(
-            itemCount: 100,
-            padding: EdgeInsets.all(20),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 15,
-              crossAxisSpacing: 15,
-              mainAxisExtent: 250,
-            ),
-            itemBuilder: (context, index) => InkWell(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailsScreen(),
-                    ));
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              height: 50,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.withOpacity(.2)),
+              child: Row(
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(15),
-                    height: 200,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey.withOpacity(.2),
-                        image: DecorationImage(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(
-                                "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"))),
-                    alignment: Alignment.topRight,
-                    child: Container(
-                      height: 45,
-                      width: 45,
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(.7),
-                          borderRadius: BorderRadius.circular(10)),
-                      child: Icon(
-                        Icons.favorite_outline,
-                        size: 30,
-                      ),
-                    ),
+                  Icon(
+                    Icons.search,
+                    size: 30,
+                  ),
+                  SizedBox(
+                    width: 10,
                   ),
                   Text(
-                    maxLines: 1,
-                    "title",
+                    "Search anything",
                     style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18),
-                  ),
-                  Text("price".toString()),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  )
                 ],
               ),
             ),
-          ))
+          ),
+          SizedBox(
+            width: 16,
+          ),
+          Container(
+            height: 50,
+            width: 50,
+            decoration: BoxDecoration(
+                color: Colors.black, borderRadius: BorderRadius.circular(10)),
+            child: Icon(
+              Icons.filter_list,
+              color: Colors.white,
+            ),
+          )
         ],
       ),
     );
