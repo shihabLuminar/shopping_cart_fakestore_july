@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_cart_may/controller/home_screen_controller.dart';
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback(
       (timeStamp) async {
         await context.read<HomeScreenController>().getCategories();
+        await context.read<HomeScreenController>().getProducts();
       },
     );
     super.initState();
@@ -105,63 +107,73 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Expanded _buildProductsSection() {
+    final homeProvider = context.watch<HomeScreenController>();
     return Expanded(
-        child: GridView.builder(
-      itemCount: 100,
-      padding: EdgeInsets.all(20),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 15,
-        crossAxisSpacing: 15,
-        mainAxisExtent: 250,
-      ),
-      itemBuilder: (context, index) => InkWell(
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProductDetailsScreen(),
-              ));
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: EdgeInsets.all(15),
-              height: 200,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey.withOpacity(.2),
-                  image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: NetworkImage(
-                          "https://images.pexels.com/photos/28518049/pexels-photo-28518049/free-photo-of-winter-wonderland-by-a-frozen-river.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"))),
-              alignment: Alignment.topRight,
-              child: Container(
-                height: 45,
-                width: 45,
-                decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(.7),
-                    borderRadius: BorderRadius.circular(10)),
-                child: Icon(
-                  Icons.favorite_outline,
-                  size: 30,
+        child: homeProvider.isProductsLoading
+            ? Center(child: CircularProgressIndicator())
+            : GridView.builder(
+                itemCount: homeProvider.productsList.length,
+                padding: EdgeInsets.all(20),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 15,
+                  mainAxisExtent: 250,
                 ),
-              ),
-            ),
-            Text(
-              maxLines: 1,
-              "title",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18),
-            ),
-            Text("price".toString()),
-          ],
-        ),
-      ),
-    ));
+                itemBuilder: (context, index) => InkWell(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailsScreen(),
+                        ));
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(15),
+                        height: 200,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.grey.withOpacity(.2),
+                            image: DecorationImage(
+                                fit: BoxFit.cover,
+                                image: NetworkImage(
+                                    homeProvider.productsList[index].image ??
+                                        ""))),
+                        alignment: Alignment.topRight,
+                        child: Container(
+                          height: 45,
+                          width: 45,
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(.7),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Icon(
+                            Icons.favorite_outline,
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        maxLines: 1,
+                        homeProvider.productsList[index].title.toString(),
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18),
+                      ),
+                      Text(
+                        "₹ ${homeProvider.productsList[index].price.toString()}",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ));
   }
 
   SingleChildScrollView _buildCategoriesSection() {
@@ -189,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 45,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                      color: homeProvider.selectedCategory == index
+                      color: homeProvider.selectedCategoryIndex == index
                           ? Colors.black
                           : Colors.grey.withOpacity(.2),
                       borderRadius: BorderRadius.circular(10)),
@@ -197,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     homeProvider.categories[index].toString().toUpperCase(),
                     style: TextStyle(
                       fontWeight: FontWeight.normal,
-                      color: homeProvider.selectedCategory == index
+                      color: homeProvider.selectedCategoryIndex == index
                           ? Colors.white
                           : Colors.black,
                     ),
