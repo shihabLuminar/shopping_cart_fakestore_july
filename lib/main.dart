@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_cart_may/controller/home_screen_controller.dart';
+import 'package:shopping_cart_may/controller/product_details_page_controller.dart';
 import 'package:shopping_cart_may/view/home_screen/home_screen.dart';
 
 void main() {
@@ -16,6 +17,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (context) => HomeScreenController(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ProductDetailsPageController(),
         )
       ],
       child: MaterialApp(

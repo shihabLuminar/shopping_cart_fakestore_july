@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_cart_may/controller/home_screen_controller.dart';
-import 'package:shopping_cart_may/main.dart';
+
 import 'package:shopping_cart_may/view/cart_screen/cart_screen.dart';
 import 'package:shopping_cart_may/view/product_details_screen/product_details_screen.dart';
 
@@ -125,7 +125,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProductDetailsScreen(),
+                          builder: (context) => ProductDetailsScreen(
+                            productId:
+                                homeProvider.productsList[index].id.toString(),
+                          ),
                         ));
                   },
                   child: Column(
