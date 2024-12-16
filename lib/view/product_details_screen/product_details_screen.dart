@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shopping_cart_may/controller/cart_screen_controllerd.dart';
 import 'package:shopping_cart_may/controller/product_details_page_controller.dart';
 import 'package:shopping_cart_may/main.dart';
 import 'package:shopping_cart_may/view/cart_screen/cart_screen.dart';
@@ -159,11 +160,40 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       Expanded(
                         child: InkWell(
                           onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CartScreen(),
-                                ));
+                            // Navigator.push(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (context) => CartScreen(),
+                            //     ));
+                            if (detailsscreenProvider.selectedProduct?.id !=
+                                null) {
+                              context
+                                  .read<CartScreenController>()
+                                  .addItem(
+                                      productId: detailsscreenProvider
+                                          .selectedProduct!.id!,
+                                      name: detailsscreenProvider
+                                              .selectedProduct?.title ??
+                                          "",
+                                      des: detailsscreenProvider
+                                              .selectedProduct?.description ??
+                                          "",
+                                      imgurl: detailsscreenProvider
+                                              .selectedProduct?.image ??
+                                          "",
+                                      price: detailsscreenProvider
+                                              .selectedProduct?.price ??
+                                          0.0)
+                                  .then(
+                                (value) {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => CartScreen(),
+                                      ));
+                                },
+                              );
+                            }
                           },
                           child: Container(
                             padding: EdgeInsets.symmetric(
