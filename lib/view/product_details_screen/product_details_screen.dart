@@ -170,6 +170,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               context
                                   .read<CartScreenController>()
                                   .addItem(
+                                      context: context,
                                       productId: detailsscreenProvider
                                           .selectedProduct!.id!,
                                       name: detailsscreenProvider
